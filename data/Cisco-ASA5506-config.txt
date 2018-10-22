@@ -1,0 +1,177 @@
+ASA Version 9.5(2)
+!
+hostname ASA1
+enable password 2KFQnbNIdI.2KYOU encrypted
+xlate per-session deny tcp any4 any4
+xlate per-session deny tcp any4 any6
+xlate per-session deny tcp any6 any4
+xlate per-session deny tcp any6 any6
+xlate per-session deny udp any4 any4 eq domain
+xlate per-session deny udp any4 any6 eq domain
+xlate per-session deny udp any6 any4 eq domain
+xlate per-session deny udp any6 any6 eq domain
+passwd 2KFQnbNIdI.2KYOU encrypted
+names
+!
+interface GigabitEthernet1/1
+ description to WAN
+ nameif outside
+ security-level 0
+ ip address 10.1.1.1 255.255.255.0
+!
+interface GigabitEthernet1/2
+ description to LAN
+ nameif inside
+ security-level 100
+ ip address 192.168.0.1 255.255.255.0
+!
+interface GigabitEthernet1/3
+ description to DMZ1
+ nameif dmz1
+ security-level 50
+ ip address 192.168.1.1 255.255.255.0
+!
+interface GigabitEthernet1/4
+ shutdown
+ no nameif
+ no security-level
+ no ip address
+!
+interface GigabitEthernet1/5
+ shutdown
+ no nameif
+ no security-level
+ no ip address
+!
+interface GigabitEthernet1/6
+ shutdown
+ no nameif
+ no security-level
+ no ip address
+!
+interface GigabitEthernet1/7
+ shutdown
+ no nameif
+ no security-level
+ no ip address
+!
+interface GigabitEthernet1/8
+ shutdown
+ no nameif
+ no security-level
+ no ip address
+!
+interface Management1/1
+ description OOB Management
+ management-only
+ nameif mgmt
+ security-level 100
+ ip address 10.255.0.38 255.255.0.0
+!
+ftp mode passive
+same-security-traffic permit inter-interface
+object network WWW-EXT
+ host 10.1.1.10
+object network WWW-INT
+ host 192.168.1.10
+object service WEB-SERVICE
+ service tcp source eq www
+object network INSIDE-NET
+ subnet 192.168.0.0 255.255.255.0
+object network DMZ1-NET
+ subnet 192.168.1.0 255.255.255.0
+access-list OUTSIDE extended permit tcp any object WWW-INT eq www
+access-list OUTSIDE extended permit icmp any4 any4 echo
+pager lines 23
+logging enable
+logging buffered debugging
+logging asdm informational
+mtu outside 1500
+mtu inside 1500
+mtu dmz1 1500
+mtu mgmt 1500
+no monitor-interface service-module
+icmp unreachable rate-limit 1 burst-size 1
+no asdm history enable
+arp timeout 14400
+no arp permit-nonconnected
+nat (dmz1,outside) source static WWW-INT WWW-EXT
+!
+nat (inside,outside) after-auto source dynamic any interface
+nat (dmz1,outside) after-auto source dynamic any interface
+access-group OUTSIDE in interface outside
+route outside 0.0.0.0 0.0.0.0 10.1.1.2 1
+timeout xlate 3:00:00
+timeout pat-xlate 0:00:30
+timeout conn 1:00:00 half-closed 0:10:00 udp 0:02:00 sctp 0:02:00 icmp 0:00:02
+timeout sunrpc 0:10:00 h323 0:05:00 h225 1:00:00 mgcp 0:05:00 mgcp-pat 0:05:00
+timeout sip 0:30:00 sip_media 0:02:00 sip-invite 0:03:00 sip-disconnect 0:02:00
+timeout sip-provisional-media 0:02:00 uauth 0:05:00 absolute
+timeout tcp-proxy-reassembly 0:01:00
+timeout floating-conn 0:00:00
+user-identity default-domain LOCAL
+aaa authentication ssh console LOCAL
+no snmp-server location
+no snmp-server contact
+service sw-reset-button
+crypto ipsec security-association pmtu-aging infinite
+crypto ca trustpoint _SmartCallHome_ServerCA
+ no validation-usage
+ crl configure
+crypto ca trustpool policy
+telnet timeout 5
+ssh stricthostkeycheck
+ssh 0.0.0.0 0.0.0.0 inside
+ssh 0.0.0.0 0.0.0.0 mgmt
+ssh timeout 5
+ssh version 1
+ssh key-exchange group dh-group1-sha1
+console timeout 0
+
+threat-detection basic-threat
+threat-detection statistics access-list
+no threat-detection statistics tcp-intercept
+dynamic-access-policy-record DfltAccessPolicy
+username cisco password 3USUcOPFUiMCO4Jk encrypted privilege 15
+!
+class-map global-class
+ match any
+class-map inspection_default
+ match default-inspection-traffic
+!
+!
+policy-map type inspect dns preset_dns_map
+ parameters
+  message-length maximum client auto
+  message-length maximum 512
+policy-map global_policy
+ class inspection_default
+  inspect ftp
+  inspect h323 h225
+  inspect h323 ras
+  inspect ip-options
+  inspect netbios
+  inspect rsh
+  inspect rtsp
+  inspect skinny
+  inspect esmtp
+  inspect sqlnet
+  inspect sunrpc
+  inspect tftp
+  inspect sip
+  inspect xdmcp
+  inspect dns preset_dns_map
+  inspect icmp
+  inspect http
+ class global-class
+  sfr fail-open
+policy-map type inspect dns migrated_dns_map_1
+ parameters
+  message-length maximum client auto
+  message-length maximum 512
+!
+service-policy global_policy global
+prompt hostname context
+Cryptochecksum:763b84f66e8d48d9d61fdea24d125d07
+: end
+
