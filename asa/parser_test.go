@@ -8,7 +8,7 @@ import (
 
 func TestParse(t *testing.T) {
 
-	r, err := os.Open(filepath.Join("test_data", "Cisco-ASA5506-config.txt"))
+	r, err := os.Open(filepath.Join("test-data", "Cisco-ASA5506-config.txt"))
 
 	if err != nil {
 		t.Fatal(err)
