@@ -149,7 +149,6 @@ type Config struct {
 }
 
 func Parse(r io.Reader) *Config {
-
 	rc := Config{
 		Interfaces: make(map[string]string),
 	}
@@ -158,7 +157,6 @@ func Parse(r io.Reader) *Config {
 
 	tokChan := l.Lex()
 
-	tokBuf := []*Token{}
 	cmdBuf := []*Token{}
 
 	handler := map[string]func([]*Token){
@@ -172,11 +170,6 @@ func Parse(r io.Reader) *Config {
 
 	for tok := range tokChan {
 		if tok == nil {
-			continue
-		}
-		tokBuf = append(tokBuf, tok)
-
-		if len(tokBuf) < 2 {
 			continue
 		}
 
